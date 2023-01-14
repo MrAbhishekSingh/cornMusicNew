@@ -2,14 +2,12 @@ import { View, Text, StatusBar, StyleSheet } from 'react-native'
 import React from 'react'
 import Player from './src/screen/musicPlayer/Player'
 import { colorNew } from './src/modal/color'
+import Navigation from './src/navigation/Navigation'
 
 const App = () => {
   return (
     <View style={{flex:1,backgroundColor:colorNew.theme}}>
-  
-    <View >
-      <Player/>
-    </View>
+      <Navigation/>
     </View>
   )
 }

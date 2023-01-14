@@ -12,9 +12,9 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
 
-const Player = () => {
+const Player = ({navigation}) => {
     return (
-        <View>
+        <View style={{flex:1,backgroundColor:colorNew.theme}}>
             <View style={{ marginTop: hp('6%') }}>
                 <Text style={{
                     textTransform: 'uppercase',
@@ -163,7 +163,9 @@ const Player = () => {
                         fontSize: hp('3%')
                     }}>never be alone</Text>
                 </View>
-                <TouchableOpacity style={{
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('MusicList')}
+                    style={{
                     borderRadius: hp('10%'),
                     borderWidth: hp('0.5%'),
                     padding: hp('1.5%'),
