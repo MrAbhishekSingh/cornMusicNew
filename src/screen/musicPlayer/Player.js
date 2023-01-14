@@ -179,7 +179,7 @@ const Player = ({navigation}) => {
                         fontWeight: '700',
                         textTransform: 'capitalize',
                         elevation: 4
-                    }}>see all lyrics</Text>
+                    }}>see all songs</Text>
                 </TouchableOpacity>
                 <View>
                 </View>
