@@ -2,19 +2,221 @@ import {
     View,
     Text,
     TouchableOpacity,
-    Image
+    Image,
+    Animated,
+    Easing,
+    PermissionsAndroid
 } from 'react-native'
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { colorNew } from '../../modal/color';
-import music from '../../assete/music.jpg'
+import mu from '../../assete/music.jpg';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import MusicFiles, {
+    RNAndroidAudioStore,
+} from '@yajanarao/react-native-get-music-files';
+import TrackPlayer, {
+    Capability,
+    Event,
+    RepeatMode,
+    State,
+    usePlaybackState,
+    useProgress,
+    useTrackPlayerEvents,
+} from 'react-native-track-player';
+
+const togglePlayBack = async playBackState => {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    console.log(playBackState, State.Paused);
+    if (currentTrack != null) {
+        if (playBackState == State.Playing) {
+            await TrackPlayer.pause();
+        } else {
+            await TrackPlayer.play();
+        }
+    }
+};
 
 
-const Player = ({navigation}) => {
+
+const Player = ({ navigation }) => {
+
+    const [music, setMusic] = useState();
+    const playBackState = usePlaybackState();
+    const [repeatMode, setRepeatMode] = useState('off');
+    const isMounted = useRef(false);
+    const [trackTitle, setTrackTitle] = useState('');
+    const [trackArtist, setTrackArtist] = useState('');
+    const [trackduration, setTrackDuration] = useState('');
+    const progress = useProgress();
+    const Sheet = useRef(null);
+    const spinValue = new Animated.Value(0);
+
+    const onClick = async () => {
+        try {
+            const granted = await PermissionsAndroid.requestMultiple(
+                [
+                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                ],
+                {
+                    title: 'Permission',
+                    message: 'Storage access is requiered',
+                    buttonPositive: 'OK',
+                },
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                alert('You can use the package');
+            } else {
+                console.log('again');
+            }
+        } catch (err) {
+            console.warn(err);
+        }
+        MusicFiles.getAll({
+            id: true,
+            album: true,
+            blured: false,
+            artist: true,
+            duration: true, //default : true
+            cover: true, //default : true,
+            title: true,
+            cover: true,
+            coverFolder: '/storage/download/',
+            coverResizeRatio: 1,
+            coverSize: 250,
+            icon: true,
+            iconSize: 250
+        })
+            .then(async tracks => {
+                var list = await tracks.map(item => item);
+                const ab = [];
+                for (var i = 0; i < list.length; i++) {
+                    const urlget = {
+                        url: list[i].path,
+                        title: list[i].title,
+                        author: list[i].author,
+                        duration:
+                            Math.floor(list[i].duration / 60000) + ':' +
+                            (((list[i].duration % 60000) / 1000).toFixed(0) < 10 ? '0' : '') +
+                            ((list[i].duration % 60000) / 1000).toFixed(0),
+                    };
+                    const ttt = ab.push(urlget);
+                }
+                setMusic(ab);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    };
+    const setupPlayer = async () => {
+        try {
+            await TrackPlayer.setupPlayer({});
+            await TrackPlayer.updateOptions({
+                stoppingAppPausesPlayback: true,
+                capabilities: [
+                    Capability.Play,
+                    Capability.Pause,
+                    Capability.SkipToNext,
+                    Capability.SkipToPrevious,
+                    Capability.SeekTo,
+                ],
+                compactCapabilities: [Capability.Play],
+            });
+            await TrackPlayer.add(music);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    useTrackPlayerEvents([Event.PlaybackTrackChanged], async event => {
+        if (event.type === Event.PlaybackTrackChanged && event.nextTrack !== null) {
+            if (event.nextTrack == null) {
+                await TrackPlayer.stop();
+            } else {
+                const track = await TrackPlayer.getTrack(event.nextTrack);
+                console.log('track', track)
+                const { title, author, duration } = track;
+                setTrackTitle(title);
+                setTrackArtist(author);
+                setTrackDuration(duration);
+            }
+        }
+    });
+
+    const changeRepeatMode = () => {
+        if (repeatMode == 'off') {
+            TrackPlayer.setRepeatMode(RepeatMode.Track);
+            setRepeatMode('track');
+        }
+
+        if (repeatMode == 'track') {
+            TrackPlayer.setRepeatMode(RepeatMode.Queue);
+            setRepeatMode('repeat');
+        }
+
+        if (repeatMode == 'repeat') {
+            TrackPlayer.setRepeatMode(RepeatMode.Off);
+            setRepeatMode('off');
+        }
+    };
+
+    const repeatIcon = () => {
+        if (repeatMode == 'off') {
+            return 'repeat-off';
+        }
+
+        if (repeatMode == 'track') {
+            return 'repeat-once';
+        }
+
+        if (repeatMode == 'repeat') {
+            return 'repeat';
+        }
+    };
+
+
+    const skipToNext = () => {
+        TrackPlayer.skipToNext();
+    };
+    const skipTo = async index => {
+        await TrackPlayer.skip(index);
+        await TrackPlayer.play();
+        console.log(index);
+    };
+    const skipToPrevious = async () => {
+        TrackPlayer.skipToPrevious();
+        await TrackPlayer.play();
+    };
+    const spin = spinValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
+    });
+    useEffect(() => {
+        onClick();
+    }, []);
+    useEffect(() => {
+        Animated.timing(spinValue, {
+            toValue: 1,
+            duration: 1550,
+            easing: Easing.linear,
+            useNativeDriver: true,
+        }).start();
+    }, [progress.position]);
+
+    useEffect(() => {
+        if (isMounted.current) {
+            if (music.length > 0) { setupPlayer(); console.log('pass') }
+            else { console.log('fail') }
+        } else {
+            isMounted.current = true
+        }
+    }, [music])
+
     return (
-        <View style={{flex:1,backgroundColor:colorNew.theme}}>
+        <View style={{ flex: 1, backgroundColor: colorNew.theme }}>
             <View style={{ marginTop: hp('6%') }}>
                 <Text style={{
                     textTransform: 'uppercase',
@@ -23,7 +225,7 @@ const Player = ({navigation}) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    dusk till down
+                    {trackTitle.substring(0, 18)}
                 </Text>
                 <Text style={{
                     textTransform: 'capitalize',
@@ -32,7 +234,7 @@ const Player = ({navigation}) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    zayan ft. sia
+                    {trackArtist.substring(0, 20)}
                 </Text>
             </View>
             <View style={{
@@ -57,24 +259,30 @@ const Player = ({navigation}) => {
                             width: hp('8%'),
                             alignSelf: 'center',
                             borderRadius: hp('60%'),
-                            justifyContent:'space-evenly',
-                            alignItems:'center',
-                            elevation:20
+                            justifyContent: 'space-evenly',
+                            alignItems: 'center',
+                            elevation: 20
                         }}>
-                        <TouchableOpacity>
-                        <AntDesign name="retweet" size={30} color="#fff" />
+                        <TouchableOpacity onPress={changeRepeatMode}>
+                            <MaterialCommunityIcons name={`${repeatIcon()}`}
+                                size={30}
+                                color={RepeatMode !== 'off' ? '#fff' : '#fff'} />
                         </TouchableOpacity>
 
-                        <TouchableOpacity>
-                        <AntDesign name="stepforward" size={30} color="#fff" />
+                        <TouchableOpacity onPress={skipToNext}>
+                            <AntDesign name="stepforward" size={30} color="#fff" />
                         </TouchableOpacity>
 
-                        <TouchableOpacity>
-                        <AntDesign name="caretright" size={30} color="#fff" />
+                        <TouchableOpacity onPress={() => { togglePlayBack(playBackState) }}>
+                            <AntDesign name={
+                                playBackState === State.Playing
+                                    ? 'pause'
+                                    : 'caretright'
+                            } size={30} color="#fff" />
                         </TouchableOpacity>
 
-                        <TouchableOpacity>
-                        <AntDesign name="stepbackward" size={30} color="#fff" />
+                        <TouchableOpacity onPress={skipToPrevious}>
+                            <AntDesign name="stepbackward" size={30} color="#fff" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -109,36 +317,35 @@ const Player = ({navigation}) => {
                             style={{
                                 transform: [{ scaleX: -1 }],
                             }}
-                            size={369}
-                            width={5}
-                            fill={55}
+                            size={375}
+                            width={6}
+                            fill={progress.position / progress.duration * 100}
                             tintColor="red"
                             // onFillChange={()=>console.log('sdfffdsfdsfds')}
                             // onAnimationComplete={() => console.log('onAnimationComplete')}
                             backgroundColor="transparent" />
                     </View>
-                    <View style={{
-                        borderWidth: hp('0.6%'),
-                        height: hp('42%'),
-                        width: hp('26%'),
-                        borderTopLeftRadius: hp('60%'),
-                        borderBottomStartRadius: hp('60%'),
-                        borderColor: '#fff',
-                        overflow: 'hidden',
-                        shadowColor: 'black',
-                        shadowOpacity: 0.8,
-                        shadowOffset: { width: 3, height: 50 },
-                        shadowRadius: 10,
-                        elevation: 20,
-                    }}>
-                        <Image
+                    <Animated.View
+                        style={{
+                            borderWidth: hp('0.6%'),
+                            height: hp('42%'),
+                            width: hp('26%'),
+                            borderTopLeftRadius: hp('60%'),
+                            borderBottomStartRadius: hp('60%'),
+                            borderColor: '#fff',
+                            overflow: 'hidden',
+                            shadowColor: 'black',
+                            shadowOpacity: 0.8,
+                            shadowOffset: { width: 3, height: 50 },
+                            shadowRadius: 10,
+                            elevation: 20,
+                        }}>
+                        <Animated.Image
                             style={{
-                                height: '100%',
-                                aspectRatio: 4 / 3
-                            }}
-                            source={music}
-                        />
-                    </View>
+                                height:'100%',width:290,resizeMode:'cover',
+                                transform: [{ rotate: spin }],
+                            }} source={mu} />
+                    </Animated.View>
                 </View>
             </View>
             <View style={{
@@ -166,14 +373,14 @@ const Player = ({navigation}) => {
                 <TouchableOpacity
                     onPress={() => navigation.navigate('MusicList')}
                     style={{
-                    borderRadius: hp('10%'),
-                    borderWidth: hp('0.5%'),
-                    padding: hp('1.5%'),
-                    marginTop: hp('2%'),
-                    borderColor: '#fff',
-                    elevation: 10,
-                    backgroundColor: colorNew.theme
-                }}>
+                        borderRadius: hp('10%'),
+                        borderWidth: hp('0.5%'),
+                        padding: hp('1.5%'),
+                        marginTop: hp('2%'),
+                        borderColor: '#fff',
+                        elevation: 10,
+                        backgroundColor: colorNew.theme
+                    }}>
                     <Text style={{
                         color: colorNew.font,
                         fontWeight: '700',
