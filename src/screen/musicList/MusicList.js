@@ -13,8 +13,9 @@ import { colorNew } from '../../modal/color'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import music from '../../assete/music.jpg'
 import MusicFiles, {
-    RNAndroidAudioStore,
-} from '@yajanarao/react-native-get-music-files';
+    Constants,
+    CoverImage
+} from "react-native-get-music-files-v3dev-test";
 import TrackPlayer, {
     Capability,
     Event,
@@ -24,7 +25,6 @@ import TrackPlayer, {
     useProgress,
     useTrackPlayerEvents,
 } from 'react-native-track-player';
-import CoverImage from '../../component/CoverImage';
 
 
 const MusicList = () => {
@@ -61,7 +61,7 @@ const MusicList = () => {
             cover: true, //default : true,
             title: true,
             cover: true,
-            coverFolder: '/storage/download/',
+            coverFolder: '/storage/emulated/0/Download/Covers',
             coverResizeRatio: 1,
             coverSize: 250,
             icon: true,
@@ -69,7 +69,7 @@ const MusicList = () => {
             fields: ['title', 'albumTitle', 'genre', 'lyrics', 'artwork', 'duration']
         })
             .then(async tracks => {
-                setSongs(tracks)
+                setSongs(tracks.results)
                 // console.log(tracks);
                 // var list = await tracks.map(item => item);
                 // const ab = [];
@@ -97,7 +97,7 @@ const MusicList = () => {
         onClick()
     }, [])
 
-    console.log('songs', songs);
+    // console.log('songs', songs);
 
     const skipTo = async index => {
         await TrackPlayer.skip(index);
@@ -125,14 +125,6 @@ const MusicList = () => {
             backgroundColor: colorNew.theme,
             paddingHorizontal: hp('3%')
         }}>
-            {/* <View style={{ borderWidth: 2, height: 200 }}>
-                <Image
-                    style={styles.tinyLogo}
-                    source={{
-                        uri: 'file:///storage/download/icons/icons169677-icon.jpg',
-                    }}
-                />
-            </View> */}
             <FlatList
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
@@ -140,40 +132,51 @@ const MusicList = () => {
                 keyExtractor={(item, index) => String(index)}
                 renderItem={({ index, item }) => (
                     <>
-                        {/* // <View style={{ flex:1, justifyContent: 'center', alignItems: 'center'}}> */}
                         <TouchableOpacity onPress={() => skipTo(index)} style={{ elevation: 10 }}>
                             <ImageBackground
                                 style={{
                                     borderWidth: hp('0.4%'),
                                     borderColor: '#fff',
-                                    height: hp('20%'),
+                                    height: hp('30%'),
                                     width: '100%',
                                     marginVertical: 10,
                                     borderRadius: 8,
                                     overflow: 'hidden',
-                                    justifyContent: 'flex-end',
+                                    // justifyContent: 'flex-end',
+                                    display: 'flex',
+                                    // flexDirection: 'column'
                                 }}
-                                source={item.cover ? {
-                                    uri: item.cover
-                                } : music} resizeMode="cover">
-                                <Text style={{
-                                    color: '#fff',
-                                    fontSize: hp('3%'),
-                                    fontWeight: '500',
-                                    textTransform: 'capitalize',
-                                    elevation: 4,
-                                    marginLeft: hp('1%')
-                                }}>{item.title.substring(0, 20)}</Text>
-                                <Text
-                                    style={{
+                                source={music} resizeMode="cover">
+                                <View style={{position:'absolute',left:30,bottom:30, zIndex: 200}}>
+                                    <Text style={{
                                         color: '#fff',
-                                        fontSize: hp('2%'),
-                                        fontWeight: '400',
+                                        fontSize: hp('3%'),
+                                        fontWeight: '500',
                                         textTransform: 'capitalize',
-                                        marginLeft: hp('1%'),
-                                        marginBottom: hp('1%')
-                                    }}
-                                >{item.author.substring(0, 30)}</Text>
+                                        elevation: 4,
+                                        marginLeft: hp('1%')
+                                    }}>{item.title ? item.title.substring(0, 20) : null}</Text>
+                                    <Text
+                                        style={{
+                                            color: '#fff',
+                                            fontSize: hp('2%'),
+                                            fontWeight: '400',
+                                            textTransform: 'capitalize',
+                                            marginLeft: hp('1%'),
+                                            marginBottom: hp('1%')
+                                        }}
+                                    >{item.artist ? item.artist.substring(0, 18) : null}</Text>
+                                </View>
+                                {item.cover ?
+                                    <CoverImage
+                                        source={
+                                            item.path
+                                        }
+                                        style={{aspectRatio: 3/2}}
+                                        width='100%'
+                                        // height='100%'
+                                        // resizeMode="contain"
+                                    /> : null}
                             </ImageBackground>
                         </TouchableOpacity>
                     </>

@@ -14,10 +14,10 @@ import mu from '../../assete/music.jpg';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
 import MusicFiles, {
-    RNAndroidAudioStore,
-} from '@yajanarao/react-native-get-music-files';
+    Constants,
+    CoverImage
+} from "react-native-get-music-files-v3dev-test";
 import TrackPlayer, {
     Capability,
     Event,
@@ -50,6 +50,7 @@ const Player = ({ navigation }) => {
     const isMounted = useRef(false);
     const [trackTitle, setTrackTitle] = useState('');
     const [trackArtist, setTrackArtist] = useState('');
+    const [urldata, setUrldata] = useState('');
     const [trackduration, setTrackDuration] = useState('');
     const progress = useProgress();
     const Sheet = useRef(null);
@@ -91,14 +92,16 @@ const Player = ({ navigation }) => {
             icon: true,
             iconSize: 250
         })
-            .then(async tracks => {
+            .then(async res => {
+                const tracks = res.results
                 var list = await tracks.map(item => item);
                 const ab = [];
                 for (var i = 0; i < list.length; i++) {
                     const urlget = {
                         url: list[i].path,
                         title: list[i].title,
-                        author: list[i].author,
+                        author: list[i].artist,
+                        artwork:list[i].cover,
                         duration:
                             Math.floor(list[i].duration / 60000) + ':' +
                             (((list[i].duration % 60000) / 1000).toFixed(0) < 10 ? '0' : '') +
@@ -137,11 +140,11 @@ const Player = ({ navigation }) => {
                 await TrackPlayer.stop();
             } else {
                 const track = await TrackPlayer.getTrack(event.nextTrack);
-                console.log('track', track)
-                const { title, author, duration } = track;
+                const { title, author, duration ,url} = track;
                 setTrackTitle(title);
                 setTrackArtist(author);
                 setTrackDuration(duration);
+                setUrldata(url);
             }
         }
     });
@@ -184,7 +187,6 @@ const Player = ({ navigation }) => {
     const skipTo = async index => {
         await TrackPlayer.skip(index);
         await TrackPlayer.play();
-        console.log(index);
     };
     const skipToPrevious = async () => {
         TrackPlayer.skipToPrevious();
@@ -225,7 +227,7 @@ const Player = ({ navigation }) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    {trackTitle.substring(0, 18)}
+                    {trackTitle ? trackTitle.substring(0, 17) : null}
                 </Text>
                 <Text style={{
                     textTransform: 'capitalize',
@@ -234,7 +236,7 @@ const Player = ({ navigation }) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    {trackArtist.substring(0, 20)}
+                    {trackArtist ? trackArtist.substring(0, 10) : '*****'}
                 </Text>
             </View>
             <View style={{
@@ -340,11 +342,18 @@ const Player = ({ navigation }) => {
                             shadowRadius: 10,
                             elevation: 20,
                         }}>
-                        <Animated.Image
+                        <CoverImage
+                            source={urldata}
+                            style={{
+                                height: '100%', width: 290, resizeMode: 'cover',
+                                // transform: [{ rotate: spin }],
+                            }}
+                        />
+                        {/* <Animated.Image
                             style={{
                                 height:'100%',width:290,resizeMode:'cover',
                                 transform: [{ rotate: spin }],
-                            }} source={mu} />
+                            }}  /> */}
                     </Animated.View>
                 </View>
             </View>

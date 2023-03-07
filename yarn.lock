@@ -5973,6 +5973,11 @@ react-native-codegen@^0.71.3:
     jscodeshift "^0.13.1"
     nullthrows "^1.1.1"
 
+react-native-get-music-files-v3dev-test@^3.1.5:
+  version "3.1.5"
+  resolved "https://registry.yarnpkg.com/react-native-get-music-files-v3dev-test/-/react-native-get-music-files-v3dev-test-3.1.5.tgz#c1d2723210e49f4e054b8b69815bd5da20f43baf"
+  integrity sha512-DgIgMLIyDosmfCvD0sArxCX4+/qYAoRUIj0LeGZZHLSuCDYe8G478OMYBKEZlZZzBI3m+mwMZwGZrl9aKvsqbA==
+
 react-native-gradle-plugin@^0.71.12:
   version "0.71.12"
   resolved "https://registry.npmjs.org/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.12.tgz"
