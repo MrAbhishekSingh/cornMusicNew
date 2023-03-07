@@ -14,6 +14,7 @@ import mu from '../../assete/music.jpg';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { InterstitialAd, BannerAd, TestIds, BannerAdSize, AdEventType } from 'react-native-google-mobile-ads';
 import MusicFiles, {
     Constants,
     CoverImage
@@ -30,7 +31,7 @@ import TrackPlayer, {
 
 const togglePlayBack = async playBackState => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
-    console.log(playBackState, State.Paused);
+    // console.log(playBackState, State.Paused);
     if (currentTrack != null) {
         if (playBackState == State.Playing) {
             await TrackPlayer.pause();
@@ -50,11 +51,19 @@ const Player = ({ navigation }) => {
     const isMounted = useRef(false);
     const [trackTitle, setTrackTitle] = useState('');
     const [trackArtist, setTrackArtist] = useState('');
-    const [urldata, setUrldata] = useState('');
+    const [urldata, setUrldata] = useState();
+    const [cover, setCover] = useState('');
     const [trackduration, setTrackDuration] = useState('');
     const progress = useProgress();
     const Sheet = useRef(null);
     const spinValue = new Animated.Value(0);
+
+    const adUnitId = __DEV__
+        ? TestIds.BANNER
+        : 'ca-app-pub-5136668440114711/9841925955';
+
+    const adUnitIdd = __DEV__ ? 'ca-app-pub-5136668440114711/7116562400' :
+        'ca-app-pub-5136668440114711/7116562400'
 
     const onClick = async () => {
         try {
@@ -72,10 +81,10 @@ const Player = ({ navigation }) => {
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 alert('You can use the package');
             } else {
-                console.log('again');
+                // console.log('again');
             }
         } catch (err) {
-            console.warn(err);
+            // console.warn(err);
         }
         MusicFiles.getAll({
             id: true,
@@ -101,7 +110,7 @@ const Player = ({ navigation }) => {
                         url: list[i].path,
                         title: list[i].title,
                         author: list[i].artist,
-                        artwork:list[i].cover,
+                        artwork: list[i].cover,
                         duration:
                             Math.floor(list[i].duration / 60000) + ':' +
                             (((list[i].duration % 60000) / 1000).toFixed(0) < 10 ? '0' : '') +
@@ -112,7 +121,7 @@ const Player = ({ navigation }) => {
                 setMusic(ab);
             })
             .catch(error => {
-                console.log(error);
+                // console.log(error);
             });
     };
     const setupPlayer = async () => {
@@ -131,20 +140,22 @@ const Player = ({ navigation }) => {
             });
             await TrackPlayer.add(music);
         } catch (error) {
-            console.log(error);
+            // console.log(error);
         }
     };
+
     useTrackPlayerEvents([Event.PlaybackTrackChanged], async event => {
         if (event.type === Event.PlaybackTrackChanged && event.nextTrack !== null) {
             if (event.nextTrack == null) {
                 await TrackPlayer.stop();
             } else {
                 const track = await TrackPlayer.getTrack(event.nextTrack);
-                const { title, author, duration ,url} = track;
+                const { title, author, duration, url, artwork } = track;
                 setTrackTitle(title);
                 setTrackArtist(author);
                 setTrackDuration(duration);
                 setUrldata(url);
+                setCover(artwork)
             }
         }
     });
@@ -211,7 +222,9 @@ const Player = ({ navigation }) => {
     useEffect(() => {
         if (isMounted.current) {
             if (music.length > 0) { setupPlayer(); console.log('pass') }
-            else { console.log('fail') }
+            else {
+                // console.log('fail')
+            }
         } else {
             isMounted.current = true
         }
@@ -219,15 +232,28 @@ const Player = ({ navigation }) => {
 
     return (
         <View style={{ flex: 1, backgroundColor: colorNew.theme }}>
+            {/* <View style={{ borderWidth: 5, borderColor: 'white' }}>
+                <BannerAd
+                    unitId={adUnitId}
+                    size={BannerAdSize.BANNER}
+                    requestOptions={{
+                        requestNonPersonalizedAdsOnly: true,
+                    }}
+                />
+            </View> */}
             <View style={{ marginTop: hp('6%') }}>
                 <Text style={{
+                    fontFamily: 'Cochin',
                     textTransform: 'uppercase',
                     fontSize: hp('4%'),
                     fontWeight: 900,
                     color: colorNew.font,
-                    marginLeft: hp('4%')
+                    marginLeft: hp('4%'),
+                    textShadowColor: 'gray',
+                    textShadowOffset: { width: -1, height: 0 },
+                    textShadowRadius: 10,
                 }}>
-                    {trackTitle ? trackTitle.substring(0, 17) : null}
+                    {trackTitle ? trackTitle.substring(0, 13) + '....' : null}
                 </Text>
                 <Text style={{
                     textTransform: 'capitalize',
@@ -236,7 +262,7 @@ const Player = ({ navigation }) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    {trackArtist ? trackArtist.substring(0, 10) : '*****'}
+                    {trackArtist ? trackArtist.substring(0, 25) : '*****'}
                 </Text>
             </View>
             <View style={{
@@ -341,19 +367,15 @@ const Player = ({ navigation }) => {
                             shadowOffset: { width: 3, height: 50 },
                             shadowRadius: 10,
                             elevation: 20,
+
                         }}>
-                        <CoverImage
-                            source={urldata}
-                            style={{
-                                height: '100%', width: 290, resizeMode: 'cover',
-                                // transform: [{ rotate: spin }],
-                            }}
-                        />
-                        {/* <Animated.Image
-                            style={{
-                                height:'100%',width:290,resizeMode:'cover',
-                                transform: [{ rotate: spin }],
-                            }}  /> */}
+                        <Animated.View style={{ height: '100%', width: 308, transform: [{ rotate: spin }], }}>
+                            <CoverImage
+                                source={urldata ? urldata : null}
+                                height='100%' width={308} resizeMode='contain'
+                            />
+                        </Animated.View>
+
                     </Animated.View>
                 </View>
             </View>
@@ -385,7 +407,7 @@ const Player = ({ navigation }) => {
                         borderRadius: hp('10%'),
                         borderWidth: hp('0.5%'),
                         padding: hp('1.5%'),
-                        marginTop: hp('2%'),
+                        marginTop: hp('1%'),
                         borderColor: '#fff',
                         elevation: 10,
                         backgroundColor: colorNew.theme
@@ -400,6 +422,15 @@ const Player = ({ navigation }) => {
                 <View>
                 </View>
 
+            </View>
+              <View style={{ display:'flex',justifyContent:'center' ,alignItems:'center', marginTop: hp('2%'),}}>
+                <BannerAd
+                    unitId={adUnitId}
+                    size={BannerAdSize.BANNER}
+                    requestOptions={{
+                        requestNonPersonalizedAdsOnly: true,
+                    }}
+                />
             </View>
         </View>
     )

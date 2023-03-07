@@ -1,4 +1,8 @@
 {
   "name": "corn",
-  "displayName": "corn"
+  "displayName": "corn",
+ "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-5136668440114711~7468449026",
+    "ios_app_id": "ca-app-pub-5136668440114711~1988358803"
+  }
 }

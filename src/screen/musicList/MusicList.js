@@ -25,10 +25,18 @@ import TrackPlayer, {
     useProgress,
     useTrackPlayerEvents,
 } from 'react-native-track-player';
+import { InterstitialAd, BannerAd, TestIds, BannerAdSize, AdEventType } from 'react-native-google-mobile-ads';
 
 
 const MusicList = () => {
     const [songs, setSongs] = useState('');
+
+
+    const adUnitId = __DEV__
+        ? TestIds.BANNER
+    : 'ca-app-pub-5136668440114711/9841925955';
+    const adUnitIdd = __DEV__ ? TestIds.INTERSTITIAL :
+        'ca-app-pub-5136668440114711/7116562400'
 
     const onClick = async () => {
         try {
@@ -46,12 +54,12 @@ const MusicList = () => {
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 alert('You can use the package');
             } else {
-                console.log('again');
+                // console.log('again');
             }
         } catch (err) {
-            console.warn(err);
+            // console.warn(err);
         }
-        console.log('click');
+        // console.log('click');
         MusicFiles.getAll({
             id: true,
             album: true,
@@ -90,7 +98,7 @@ const MusicList = () => {
                 // setMusic(ab);
             })
             .catch(error => {
-                console.log(error);
+                // console.log(error);
             });
     };
     useEffect(() => {
@@ -102,7 +110,6 @@ const MusicList = () => {
     const skipTo = async index => {
         await TrackPlayer.skip(index);
         await TrackPlayer.play();
-        console.log(index);
     };
 
     const styles = StyleSheet.create({
@@ -132,38 +139,52 @@ const MusicList = () => {
                 keyExtractor={(item, index) => String(index)}
                 renderItem={({ index, item }) => (
                     <>
+
+
                         <TouchableOpacity onPress={() => skipTo(index)} style={{ elevation: 10 }}>
                             <ImageBackground
                                 style={{
                                     borderWidth: hp('0.4%'),
                                     borderColor: '#fff',
-                                    height: hp('30%'),
+                                    aspectRatio: 4 / 4,
                                     width: '100%',
                                     marginVertical: 10,
                                     borderRadius: 8,
                                     overflow: 'hidden',
-                                    // justifyContent: 'flex-end',
                                     display: 'flex',
-                                    // flexDirection: 'column'
                                 }}
                                 source={music} resizeMode="cover">
-                                <View style={{position:'absolute',left:30,bottom:30, zIndex: 200}}>
+                                <View style={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    bottom: 0,
+                                    zIndex: 200,
+                                    backgroundColor: '#fff',
+                                    width: '100%',
+                                    elevation: 10,
+                                    opacity: 0.9,
+                                }}>
                                     <Text style={{
-                                        color: '#fff',
+                                        textShadowColor: 'gray',
+                                        textShadowOffset: { width: -1, height: 0 },
+                                        textShadowRadius: 10,
+                                        color: '#000',
+                                        fontFamily: 'tahoma',
                                         fontSize: hp('3%'),
-                                        fontWeight: '500',
+                                        fontWeight: '700',
                                         textTransform: 'capitalize',
                                         elevation: 4,
                                         marginLeft: hp('1%')
-                                    }}>{item.title ? item.title.substring(0, 20) : null}</Text>
+                                    }}>{item.title ? item.title.substring(0, 20) + '...' : null}</Text>
                                     <Text
                                         style={{
-                                            color: '#fff',
+                                            color: 'gray',
                                             fontSize: hp('2%'),
-                                            fontWeight: '400',
+                                            fontWeight: '700',
                                             textTransform: 'capitalize',
                                             marginLeft: hp('1%'),
-                                            marginBottom: hp('1%')
+                                            marginBottom: hp('1%'),
+                                            textTransform: 'uppercase'
                                         }}
                                     >{item.artist ? item.artist.substring(0, 18) : null}</Text>
                                 </View>
@@ -172,13 +193,19 @@ const MusicList = () => {
                                         source={
                                             item.path
                                         }
-                                        style={{aspectRatio: 3/2}}
-                                        width='100%'
-                                        // height='100%'
-                                        // resizeMode="contain"
+                                        style={{ aspectRatio: 4 / 4 }}
                                     /> : null}
                             </ImageBackground>
                         </TouchableOpacity>
+                        <View style={{ }}>
+                            <BannerAd
+                                unitId={adUnitId}
+                                size={BannerAdSize.BANNER}
+                                requestOptions={{
+                                    requestNonPersonalizedAdsOnly: true,
+                                }}
+                            />
+                        </View>
                     </>
                 )} />
         </View>
