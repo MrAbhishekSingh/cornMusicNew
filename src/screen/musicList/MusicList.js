@@ -32,11 +32,11 @@ const MusicList = () => {
     const [songs, setSongs] = useState('');
 
 
-    const adUnitId = __DEV__
-        ? TestIds.BANNER
-    : 'ca-app-pub-5136668440114711/9841925955';
-    const adUnitIdd = __DEV__ ? TestIds.INTERSTITIAL :
-        'ca-app-pub-5136668440114711/7116562400'
+    const adUnitId = __DEV__ ? 'ca-app-pub-5136668440114711/6398570319' :
+        'ca-app-pub-5136668440114711/6398570319';
+
+    const adUnitIdd = __DEV__ ? 'ca-app-pub-5136668440114711/2925943751' :
+        'ca-app-pub-5136668440114711/2925943751'
 
     const onClick = async () => {
         try {
@@ -197,7 +197,7 @@ const MusicList = () => {
                                     /> : null}
                             </ImageBackground>
                         </TouchableOpacity>
-                        <View style={{ }}>
+                        <View style={{}}>
                             <BannerAd
                                 unitId={adUnitId}
                                 size={BannerAdSize.BANNER}

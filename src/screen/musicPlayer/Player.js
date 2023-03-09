@@ -58,12 +58,11 @@ const Player = ({ navigation }) => {
     const Sheet = useRef(null);
     const spinValue = new Animated.Value(0);
 
-    const adUnitId = __DEV__
-        ? TestIds.BANNER
-        : 'ca-app-pub-5136668440114711/9841925955';
+    const adUnitId = __DEV__ ? 'ca-app-pub-5136668440114711/6398570319' :
+        'ca-app-pub-5136668440114711/6398570319';
 
-    const adUnitIdd = __DEV__ ? 'ca-app-pub-5136668440114711/7116562400' :
-        'ca-app-pub-5136668440114711/7116562400'
+    const adUnitIdd = __DEV__ ? 'ca-app-pub-5136668440114711/2925943751' :
+        'ca-app-pub-5136668440114711/2925943751'
 
     const onClick = async () => {
         try {
@@ -129,14 +128,22 @@ const Player = ({ navigation }) => {
             await TrackPlayer.setupPlayer({});
             await TrackPlayer.updateOptions({
                 stoppingAppPausesPlayback: true,
+                stopWithApp: false,
                 capabilities: [
                     Capability.Play,
                     Capability.Pause,
                     Capability.SkipToNext,
                     Capability.SkipToPrevious,
-                    Capability.SeekTo,
+                    Capability.Skip,
                 ],
-                compactCapabilities: [Capability.Play],
+                compactCapabilities: [
+                    Capability.Play,
+                    Capability.Pause,
+                    Capability.SkipToNext,
+                    Capability.SkipToPrevious,
+                     Capability.Skip,
+                ],
+                // progressUpdateEventInterval: 2,
             });
             await TrackPlayer.add(music);
         } catch (error) {
@@ -423,7 +430,7 @@ const Player = ({ navigation }) => {
                 </View>
 
             </View>
-              <View style={{ display:'flex',justifyContent:'center' ,alignItems:'center', marginTop: hp('2%'),}}>
+            <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: hp('2%'), }}>
                 <BannerAd
                     unitId={adUnitId}
                     size={BannerAdSize.BANNER}

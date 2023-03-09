@@ -6,17 +6,16 @@ import Navigation from './src/navigation/Navigation'
 import { InterstitialAd, BannerAd, TestIds, BannerAdSize, AdEventType } from 'react-native-google-mobile-ads';
 
 const App = () => {
-  const adUnitId = __DEV__
-    ? 'ca-app-pub-5136668440114711/9841925955'
-    : 'ca-app-pub-5136668440114711/9841925955';
+  const adUnitId = __DEV__ ? 'ca-app-pub-5136668440114711/6398570319' :
+    'ca-app-pub-5136668440114711/6398570319';
 
-  const adUnitIdd = __DEV__ ? 'ca-app-pub-5136668440114711/7116562400' :
-    'ca-app-pub-5136668440114711/7116562400'
+  const adUnitIdd = __DEV__ ? 'ca-app-pub-5136668440114711/2925943751' :
+    'ca-app-pub-5136668440114711/2925943751'
 
   useEffect(() => {
     let interstitial = InterstitialAd.createForAdRequest(adUnitIdd, {
       requestNonPersonalizedAdsOnly: true,
-      keywords: ['fashion', 'clothing'],
+      // keywords: ['fashion', 'clothing'],
     });
     interstitial.addAdEventListener(AdEventType.LOADED, () => {
       interstitial.show();
