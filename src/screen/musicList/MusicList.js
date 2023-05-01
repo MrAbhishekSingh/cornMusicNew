@@ -6,7 +6,8 @@ import {
     Image,
     TouchableOpacity,
     PermissionsAndroid,
-    StyleSheet
+    StyleSheet,
+    Platform
 } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { colorNew } from '../../modal/color'
@@ -41,26 +42,26 @@ const MusicList = () => {
     const onClick = async () => {
         try {
             const granted = await PermissionsAndroid.requestMultiple(
-                [
-                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                ],
+                Platform.Version >= 33 ?
+                    [
+                        PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+                        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                    ] :
+                    [
+                        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                    ],
                 {
                     title: 'Permission',
                     message: 'Storage access is requiered',
                     buttonPositive: 'OK',
                 },
             );
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                alert('You can use the package');
-            } else {
-                // console.log('again');
-            }
         } catch (err) {
-            // console.warn(err);
+            // console.log(err);
         }
-        // console.log('click');
-        MusicFiles.getAll({
+
+        await MusicFiles.getAll({
             id: true,
             album: true,
             blured: false,
@@ -98,7 +99,7 @@ const MusicList = () => {
                 // setMusic(ab);
             })
             .catch(error => {
-                // console.log(error);
+                console.log(error);
             });
     };
     useEffect(() => {
@@ -139,8 +140,6 @@ const MusicList = () => {
                 keyExtractor={(item, index) => String(index)}
                 renderItem={({ index, item }) => (
                     <>
-
-
                         <TouchableOpacity onPress={() => skipTo(index)} style={{ elevation: 10 }}>
                             <ImageBackground
                                 style={{
@@ -165,7 +164,7 @@ const MusicList = () => {
                                     opacity: 0.9,
                                 }}>
                                     <Text style={{
-                                        textShadowColor: 'gray',
+                                        textShadowColor: '#fff',
                                         textShadowOffset: { width: -1, height: 0 },
                                         textShadowRadius: 10,
                                         color: '#000',
@@ -189,12 +188,7 @@ const MusicList = () => {
                                     >{item.artist ? item.artist.substring(0, 18) : null}</Text>
                                 </View>
                                 {item.cover ?
-                                    <CoverImage
-                                        source={
-                                            item.path
-                                        }
-                                        style={{ aspectRatio: 4 / 4 }}
-                                    /> : null}
+                                    <Image  style={{ aspectRatio: 4 / 4 }} source={{ uri: `data:image/png;base64,${item.cover}` }} /> : null}
                             </ImageBackground>
                         </TouchableOpacity>
                         <View style={{}}>

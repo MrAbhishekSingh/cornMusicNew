@@ -5,7 +5,9 @@ import {
     Image,
     Animated,
     Easing,
-    PermissionsAndroid
+    PermissionsAndroid,
+    ScrollView,
+    Platform
 } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -67,10 +69,15 @@ const Player = ({ navigation }) => {
     const onClick = async () => {
         try {
             const granted = await PermissionsAndroid.requestMultiple(
-                [
-                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                ],
+                Platform.Version >= 33 ?
+                    [
+                        PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+                        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                    ] :
+                    [
+                        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                    ],
                 {
                     title: 'Permission',
                     message: 'Storage access is requiered',
@@ -83,10 +90,10 @@ const Player = ({ navigation }) => {
                 // console.log('again');
             }
         } catch (err) {
-            // console.warn(err);
+            console.warn(err);
         }
         MusicFiles.getAll({
-            id: true,
+             id: true,
             album: true,
             blured: false,
             artist: true,
@@ -94,17 +101,21 @@ const Player = ({ navigation }) => {
             cover: true, //default : true,
             title: true,
             cover: true,
-            coverFolder: '/storage/download/',
+            coverFolder: '/storage/emulated/0/Download/Covers',
             coverResizeRatio: 1,
             coverSize: 250,
             icon: true,
-            iconSize: 250
+            iconSize: 250,
+            fields: ['title', 'albumTitle', 'genre', 'lyrics', 'artwork', 'duration']
         })
             .then(async res => {
                 const tracks = res.results
+                // console.log('tracks', tracks);
                 var list = await tracks.map(item => item);
+                
                 const ab = [];
                 for (var i = 0; i < list.length; i++) {
+                    // console.log(list[i].cover);
                     const urlget = {
                         url: list[i].path,
                         title: list[i].title,
@@ -115,7 +126,8 @@ const Player = ({ navigation }) => {
                             (((list[i].duration % 60000) / 1000).toFixed(0) < 10 ? '0' : '') +
                             ((list[i].duration % 60000) / 1000).toFixed(0),
                     };
-                    const ttt = ab.push(urlget);
+                    ab.push(urlget);
+                    console.log(list[i].cover);
                 }
                 setMusic(ab);
             })
@@ -128,7 +140,6 @@ const Player = ({ navigation }) => {
             await TrackPlayer.setupPlayer({});
             await TrackPlayer.updateOptions({
                 stoppingAppPausesPlayback: true,
-                stopWithApp: false,
                 capabilities: [
                     Capability.Play,
                     Capability.Pause,
@@ -141,7 +152,7 @@ const Player = ({ navigation }) => {
                     Capability.Pause,
                     Capability.SkipToNext,
                     Capability.SkipToPrevious,
-                     Capability.Skip,
+                    Capability.Skip,
                 ],
                 // progressUpdateEventInterval: 2,
             });
@@ -158,6 +169,7 @@ const Player = ({ navigation }) => {
             } else {
                 const track = await TrackPlayer.getTrack(event.nextTrack);
                 const { title, author, duration, url, artwork } = track;
+                console.log('track',track);
                 setTrackTitle(title);
                 setTrackArtist(author);
                 setTrackDuration(duration);
@@ -217,6 +229,7 @@ const Player = ({ navigation }) => {
     useEffect(() => {
         onClick();
     }, []);
+
     useEffect(() => {
         Animated.timing(spinValue, {
             toValue: 1,
@@ -228,7 +241,8 @@ const Player = ({ navigation }) => {
 
     useEffect(() => {
         if (isMounted.current) {
-            if (music.length > 0) { setupPlayer(); console.log('pass') }
+            // console.log(music, 'music');
+            if (music) { setupPlayer(); console.log('pass') }
             else {
                 // console.log('fail')
             }
@@ -238,8 +252,8 @@ const Player = ({ navigation }) => {
     }, [music])
 
     return (
-        <View style={{ flex: 1, backgroundColor: colorNew.theme }}>
-            {/* <View style={{ borderWidth: 5, borderColor: 'white' }}>
+        <ScrollView style={{ flex: 1, backgroundColor: colorNew.theme }}>
+            <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', }}>
                 <BannerAd
                     unitId={adUnitId}
                     size={BannerAdSize.BANNER}
@@ -247,8 +261,8 @@ const Player = ({ navigation }) => {
                         requestNonPersonalizedAdsOnly: true,
                     }}
                 />
-            </View> */}
-            <View style={{ marginTop: hp('6%') }}>
+            </View>
+            <View style={{ marginTop: hp('1%') }}>
                 <Text style={{
                     fontFamily: 'Cochin',
                     textTransform: 'uppercase',
@@ -269,11 +283,11 @@ const Player = ({ navigation }) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    {trackArtist ? trackArtist.substring(0, 25) : '*****'}
+                    {trackArtist ? trackArtist.substring(0, 25) : 'please wait..'}
                 </Text>
             </View>
             <View style={{
-                height: 500,
+                height: hp('63%'),
                 flexDirection: 'row',
                 alignItems: 'center'
 
@@ -303,11 +317,9 @@ const Player = ({ navigation }) => {
                                 size={30}
                                 color={RepeatMode !== 'off' ? '#fff' : '#fff'} />
                         </TouchableOpacity>
-
-                        <TouchableOpacity onPress={skipToNext}>
-                            <AntDesign name="stepforward" size={30} color="#fff" />
+                        <TouchableOpacity onPress={skipToPrevious}>
+                            <AntDesign name="stepbackward" size={30} color="#fff" />
                         </TouchableOpacity>
-
                         <TouchableOpacity onPress={() => { togglePlayBack(playBackState) }}>
                             <AntDesign name={
                                 playBackState === State.Playing
@@ -315,10 +327,11 @@ const Player = ({ navigation }) => {
                                     : 'caretright'
                             } size={30} color="#fff" />
                         </TouchableOpacity>
-
-                        <TouchableOpacity onPress={skipToPrevious}>
-                            <AntDesign name="stepbackward" size={30} color="#fff" />
+                        <TouchableOpacity onPress={skipToNext}>
+                            <AntDesign name="stepforward" size={30} color="#fff" />
                         </TouchableOpacity>
+
+
                     </View>
                 </View>
                 <View
@@ -348,15 +361,17 @@ const Player = ({ navigation }) => {
                         height: hp('49%')
                     }}>
                         <AnimatedCircularProgress
-                            rotation={-0 - 90}
+                            rotation={-360 - 360}
                             style={{
                                 transform: [{ scaleX: -1 }],
                             }}
+                            arcSweepAngle={180}
                             size={375}
-                            width={6}
+                            width={8}
+                            // fill={50}
                             fill={progress.position / progress.duration * 100}
                             tintColor="red"
-                            // onFillChange={()=>console.log('sdfffdsfdsfds')}
+                            // onFillChange={() => console.log('sdfffdsfdsfds')}
                             // onAnimationComplete={() => console.log('onAnimationComplete')}
                             backgroundColor="transparent" />
                     </View>
@@ -377,10 +392,12 @@ const Player = ({ navigation }) => {
 
                         }}>
                         <Animated.View style={{ height: '100%', width: 308, transform: [{ rotate: spin }], }}>
+                          {cover ?   
+                            <Image style={{ aspectRatio: 4 / 4 }} source={{ uri: `data:image/png;base64,${cover}` }} /> : 
                             <CoverImage
                                 source={urldata ? urldata : null}
                                 height='100%' width={308} resizeMode='contain'
-                            />
+                            />}
                         </Animated.View>
 
                     </Animated.View>
@@ -439,7 +456,7 @@ const Player = ({ navigation }) => {
                     }}
                 />
             </View>
-        </View>
+        </ScrollView>
     )
 }
 
