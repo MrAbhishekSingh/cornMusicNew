@@ -12,7 +12,6 @@ import {
 import React, { useEffect, useRef, useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { colorNew } from '../../modal/color';
-import mu from '../../assete/music.jpg';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -30,6 +29,7 @@ import TrackPlayer, {
     useProgress,
     useTrackPlayerEvents,
 } from 'react-native-track-player';
+import logo from '../../assets/corn.jpg'
 
 const togglePlayBack = async playBackState => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
@@ -93,7 +93,7 @@ const Player = ({ navigation }) => {
             console.warn(err);
         }
         MusicFiles.getAll({
-             id: true,
+            id: true,
             album: true,
             blured: false,
             artist: true,
@@ -112,7 +112,7 @@ const Player = ({ navigation }) => {
                 const tracks = res.results
                 // console.log('tracks', tracks);
                 var list = await tracks.map(item => item);
-                
+
                 const ab = [];
                 for (var i = 0; i < list.length; i++) {
                     // console.log(list[i].cover);
@@ -127,7 +127,6 @@ const Player = ({ navigation }) => {
                             ((list[i].duration % 60000) / 1000).toFixed(0),
                     };
                     ab.push(urlget);
-                    console.log(list[i].cover);
                 }
                 setMusic(ab);
             })
@@ -169,7 +168,6 @@ const Player = ({ navigation }) => {
             } else {
                 const track = await TrackPlayer.getTrack(event.nextTrack);
                 const { title, author, duration, url, artwork } = track;
-                console.log('track',track);
                 setTrackTitle(title);
                 setTrackArtist(author);
                 setTrackDuration(duration);
@@ -233,7 +231,7 @@ const Player = ({ navigation }) => {
     useEffect(() => {
         Animated.timing(spinValue, {
             toValue: 1,
-            duration: 1550,
+            duration: 1600,
             easing: Easing.linear,
             useNativeDriver: true,
         }).start();
@@ -250,6 +248,9 @@ const Player = ({ navigation }) => {
             isMounted.current = true
         }
     }, [music])
+    
+    const fill = (progress.position / progress.duration) * 100; 
+    
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: colorNew.theme }}>
@@ -274,7 +275,7 @@ const Player = ({ navigation }) => {
                     textShadowOffset: { width: -1, height: 0 },
                     textShadowRadius: 10,
                 }}>
-                    {trackTitle ? trackTitle.substring(0, 13) + '....' : null}
+                    {trackTitle ? trackTitle.substring(0, 15) + '....' : null}
                 </Text>
                 <Text style={{
                     textTransform: 'capitalize',
@@ -283,7 +284,13 @@ const Player = ({ navigation }) => {
                     color: colorNew.font,
                     marginLeft: hp('4%')
                 }}>
-                    {trackArtist ? trackArtist.substring(0, 25) : 'please wait..'}
+                    {new Date((progress.duration - progress.position) * 1000).toISOString().substr(14, 5)}&nbsp;
+                    <AntDesign name="minus" size={hp('2.5%')} color="#fff" />
+                    <AntDesign name="minus" size={hp('2.5%')} color="#fff" />&nbsp;
+                    {trackArtist ? trackArtist.substring(0, 11) : 'please wait..'}
+                    <AntDesign name="minus" size={hp('2.5%')} color="#fff" />
+                    <AntDesign name="minus" size={hp('2.5%')} color="#fff" />&nbsp;
+                    {new Date(progress.position * 1000).toISOString().substr(14, 5)}
                 </Text>
             </View>
             <View style={{
@@ -310,7 +317,7 @@ const Player = ({ navigation }) => {
                             borderRadius: hp('60%'),
                             justifyContent: 'space-evenly',
                             alignItems: 'center',
-                            elevation: 20
+                            elevation: 10
                         }}>
                         <TouchableOpacity onPress={changeRepeatMode}>
                             <MaterialCommunityIcons name={`${repeatIcon()}`}
@@ -330,8 +337,6 @@ const Player = ({ navigation }) => {
                         <TouchableOpacity onPress={skipToNext}>
                             <AntDesign name="stepforward" size={30} color="#fff" />
                         </TouchableOpacity>
-
-
                     </View>
                 </View>
                 <View
@@ -345,12 +350,9 @@ const Player = ({ navigation }) => {
                         flexDirection: 'row',
                         justifyContent: 'flex-end',
                         alignItems: 'center',
-                        shadowColor: '#fff',
-                        shadowOpacity: 0.26,
-                        shadowOffset: { width: 0, height: 50 },
                         shadowRadius: 10,
-                        elevation: 20,
-
+                        elevation: 25,
+                        backgroundColor:colorNew.theme
                     }}>
                     <View style={{
                         position: 'absolute',
@@ -358,7 +360,7 @@ const Player = ({ navigation }) => {
                         left: hp('1.5%'),
                         width: hp('50%'),
                         borderRadius: hp('50%'),
-                        height: hp('49%')
+                        height: hp('49%'),
                     }}>
                         <AnimatedCircularProgress
                             rotation={-360 - 360}
@@ -368,12 +370,12 @@ const Player = ({ navigation }) => {
                             arcSweepAngle={180}
                             size={375}
                             width={8}
-                            // fill={50}
-                            fill={progress.position / progress.duration * 100}
+                            // fill={progress.position / progress.duration * 100}
+                            fill={fill}
+                            useNativeDriver={false}
                             tintColor="red"
-                            // onFillChange={() => console.log('sdfffdsfdsfds')}
-                            // onAnimationComplete={() => console.log('onAnimationComplete')}
-                            backgroundColor="transparent" />
+                            onAnimationComplete={() => console.log('onAnimationComplete')}
+                            backgroundColor="#fff" />
                     </View>
                     <Animated.View
                         style={{
@@ -384,7 +386,7 @@ const Player = ({ navigation }) => {
                             borderBottomStartRadius: hp('60%'),
                             borderColor: '#fff',
                             overflow: 'hidden',
-                            shadowColor: 'black',
+                            shadowColor: '#fff',
                             shadowOpacity: 0.8,
                             shadowOffset: { width: 3, height: 50 },
                             shadowRadius: 10,
@@ -392,12 +394,10 @@ const Player = ({ navigation }) => {
 
                         }}>
                         <Animated.View style={{ height: '100%', width: 308, transform: [{ rotate: spin }], }}>
-                          {cover ?   
-                            <Image style={{ aspectRatio: 4 / 4 }} source={{ uri: `data:image/png;base64,${cover}` }} /> : 
-                            <CoverImage
-                                source={urldata ? urldata : null}
-                                height='100%' width={308} resizeMode='contain'
-                            />}
+                            {cover ?
+                                <Image style={{ aspectRatio: 4 / 4 }} source={{ uri: `data:image/png;base64,${cover}` }} /> :
+                                <Image style={{ height:320,width:320 }} source={logo} /> 
+                            }
                         </Animated.View>
 
                     </Animated.View>

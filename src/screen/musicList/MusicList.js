@@ -12,7 +12,7 @@ import {
 import React, { useEffect, useState } from 'react'
 import { colorNew } from '../../modal/color'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import music from '../../assete/music.jpg'
+import music from '../../assets/music.jpg'
 import MusicFiles, {
     Constants,
     CoverImage
@@ -29,7 +29,7 @@ import TrackPlayer, {
 import { InterstitialAd, BannerAd, TestIds, BannerAdSize, AdEventType } from 'react-native-google-mobile-ads';
 
 
-const MusicList = () => {
+const MusicList = ({navigation}) => {
     const [songs, setSongs] = useState('');
 
 
@@ -140,7 +140,10 @@ const MusicList = () => {
                 keyExtractor={(item, index) => String(index)}
                 renderItem={({ index, item }) => (
                     <>
-                        <TouchableOpacity onPress={() => skipTo(index)} style={{ elevation: 10 }}>
+                        <TouchableOpacity onPress={() => {
+                            skipTo(index),
+                            navigation.navigate('Home')
+                        }} style={{ elevation: 10 }}>
                             <ImageBackground
                                 style={{
                                     borderWidth: hp('0.4%'),
